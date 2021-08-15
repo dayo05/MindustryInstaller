@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindustryInstaller", "MindustryInstaller\MindustryInstaller.csproj", "{AD73FD7A-F762-463F-9E54-8A8B060DAC2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindustryLauncher", "MindustryLauncher\MindustryLauncher.csproj", "{1F881E72-0A19-418B-8622-3B44F4E3D950}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD73FD7A-F762-463F-9E54-8A8B060DAC2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD73FD7A-F762-463F-9E54-8A8B060DAC2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD73FD7A-F762-463F-9E54-8A8B060DAC2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD73FD7A-F762-463F-9E54-8A8B060DAC2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F881E72-0A19-418B-8622-3B44F4E3D950}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F881E72-0A19-418B-8622-3B44F4E3D950}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F881E72-0A19-418B-8622-3B44F4E3D950}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F881E72-0A19-418B-8622-3B44F4E3D950}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2A4F7F56-29C6-411C-AB63-D94A2DC81E1B}
+	EndGlobalSection
+EndGlobal
