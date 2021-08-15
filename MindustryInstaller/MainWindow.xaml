@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MindustryInstaller"
         mc:Ignorable="d"
-        Title="MainWindow" Height="278.5" Width="422.5">
+        Title="MainWindow" Height="278.5" Width="422.5" Closed="Window_Closed">
     <Grid>
         <CheckBox Name="DownloadJavaCheckbox" Content="Download JAVA" HorizontalAlignment="Center" Margin="46,55,28,0" VerticalAlignment="Top" Width="130" IsChecked="true"/>
         <CheckBox Name="UseStableVersionCheckbox" Content="Use stable version" HorizontalAlignment="Center" Margin="46,75,28,0" VerticalAlignment="Top" RenderTransformOrigin="0.343,-0.378" Width="130" Checked="UseStableVersionCheckbox_Checked" IsChecked="true" Unchecked="UseStableVersionCheckbox_Unchecked"/>

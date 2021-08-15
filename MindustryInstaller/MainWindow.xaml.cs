@@ -21,6 +21,7 @@ namespace MindustryInstaller
         public MainWindow()
         {
             InitializeComponent();
+            new Thread(LoadVersionOfLauncher).Start();
             Directory.CreateDirectory(InstallDir);
             Directory.CreateDirectory(TempDir);
         }
@@ -29,17 +30,33 @@ namespace MindustryInstaller
         string TempDir = Path.GetTempPath() + "MindustryInstaller";
         bool DownloadStable = true;
         string version = null;
+        string launcherVersion = null;
         int downloadstat = 0;
         int tick = 0;
+        object sync;
         void PrintLog(string log)
         {
             Invoke(() => LogTextBlock.Text += log + '\n');
             Invoke(() => logView.ScrollToBottom());
         }
-        
+        //Gets version of launcher
+        void LoadVersionOfLauncher()
+        {
+            Invoke(() => InstallButton.IsEnabled = false);
+            Invoke(() => UseStableVersionCheckbox.IsEnabled = false);
+            using (var wc = new WebClient())
+            {
+                wc.Headers["User-Agent"] = "ua";
+                PrintLog("Searching launcher version");
+                launcherVersion = wc.DownloadString("https://api.github.com/repos/Dayo05/MindustryInstaller/releases/latest");
+                launcherVersion = JsonConvert.DeserializeObject<Dictionary<string, object>>(launcherVersion)["tag_name"] as string;
+                PrintLog($"Launcher version: {launcherVersion} found");
+            }
+        }
         //Gets version of Mindustry
         void LoadVersion()
         {
+            while (launcherVersion == null) { }
             Invoke(() => InstallButton.IsEnabled = false);
             Invoke(() => UseStableVersionCheckbox.IsEnabled = false);
             using (var wc = new WebClient())
@@ -57,7 +74,7 @@ namespace MindustryInstaller
                     version = wc.DownloadString("https://api.github.com/repos/Anuken/Mindustry/releases");
                     version = JsonConvert.DeserializeObject<List<Dictionary<string, dynamic>>>(version)[0]["tag_name"] as string;
                 }
-                PrintLog($"{version} found");
+                PrintLog($"Mindustry version: {version} found");
                 Invoke(() => VersionLabel.Content = "Mindustry version: " + version);
             }
             Invoke(() => InstallButton.IsEnabled = true);
@@ -85,39 +102,55 @@ namespace MindustryInstaller
                     {
                         try
                         {
-                            Directory.Delete(Path.GetTempPath() + @"java", true);
+                            Directory.Delete(TempDir + @"java", true);
+                        }
+                        catch (DirectoryNotFoundException) { }
+                        try
+                        {
+                            Directory.Delete(InstallDir + @"java", true);
                         }
                         catch (DirectoryNotFoundException) { }
                         downloadstat = 1;
-                        var sync = new object();
+                        sync = new object();
                         lock (sync)
                         {
-                            wc.DownloadFileAsync(new Uri("https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_windows-x64_bin.zip"), Path.GetTempPath() + "mindustry-java.zip");
+                            wc.DownloadFileAsync(new Uri("https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_windows-x64_bin.zip"), TempDir + "mindustry-java.zip");
                             Monitor.Wait(sync);
                         }
                         PrintLog("Extrecting JAVA Java to " + InstallDir + "java");
-                        ZipFile.ExtractToDirectory(Path.GetTempPath() + "mindustry-java.zip", Path.GetTempPath() + "java");
-                        Directory.Move(Path.GetTempPath() + @"java\jdk-16.0.2", InstallDir + "java");
+                        ZipFile.ExtractToDirectory(TempDir + "mindustry-java.zip", TempDir + "java");
+                        Directory.Move(TempDir + @"java\jdk-16.0.2", InstallDir + "java");
                     }
                     if (File.Exists(InstallDir + "Mindustry.jar"))
                         File.Delete(InstallDir + "Mindustry.jar");
+                    if (File.Exists(InstallDir + "Mindustry.exe"))
+                        File.Delete(InstallDir + "Mindustry.exe");
                     downloadstat = 2;
-                    var sync2 = new object();
-                    lock (sync2)
+                    sync = new object();
+                    lock (sync)
                     {
-                        wc.DownloadFile($"https://github.com/Anuken/Mindustry/releases/download/{version}/Mindustry.jar", InstallDir + "Mindustry.jar");
-                        Monitor.Wait(sync2);
+                        PrintLog("Downloading Mindustry");
+                        wc.DownloadFileAsync(new Uri($"https://github.com/Anuken/Mindustry/releases/download/{version}/Mindustry.jar"), InstallDir + "Mindustry.jar");
+                        Monitor.Wait(sync);
+                    }
+                    downloadstat = 3;
+                    sync = new object();
+                    lock (sync)
+                    {
+                        PrintLog("Downloading Launcher");
+                        wc.DownloadFileAsync(new Uri($"https://github.com/dayo05/MindustryInstaller/releases/download/{launcherVersion}/MindustryLauncher.exe"), InstallDir + "Mindustry.exe");
+                        Monitor.Wait(sync);
                     }
                 }
                 PrintLog("Cleaning files");
                 try
                 {
-                    Directory.Delete(Path.GetTempPath() + @"java", true);
+                    Directory.Delete(TempDir + @"java", true);
                 }
                 catch (DirectoryNotFoundException) { }
                 try
                 {
-                    File.Delete(Path.GetTempPath() + "mindustry-java.zip");
+                    File.Delete(TempDir + "mindustry-java.zip");
                 }
                 catch (DirectoryNotFoundException) { }
             }
@@ -126,16 +159,22 @@ namespace MindustryInstaller
                 _ = MessageBox.Show(e.Message);
             }
             downloadstat = 0;
+            PrintLog("Finished.");
             Invoke(() => InstallButton.IsEnabled = true);
         }
 
         private void WC_DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
-            if (downloadstat == 1)
-                PrintLog("Java Downloaded");
-            else if (downloadstat == 2)
-                PrintLog("Mindustry Downloaded");
-            Monitor.Pulse(e.UserState);
+            lock (sync)
+            {
+                if (downloadstat == 1)
+                    PrintLog("Java Downloaded");
+                else if (downloadstat == 2)
+                    PrintLog("Mindustry Downloaded");
+                else if (downloadstat == 3)
+                    PrintLog("Launcher Downloaded");
+                Monitor.Pulse(sync);
+            }
         }
 
         private void WC_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
@@ -146,6 +185,8 @@ namespace MindustryInstaller
                     PrintLog($"Downloading JAVA...{e.ProgressPercentage}% ({e.BytesReceived} / {e.TotalBytesToReceive})");
                 else if (downloadstat == 2)
                     PrintLog($"Downloading Mindustry...{e.ProgressPercentage}% ({e.BytesReceived} / {e.TotalBytesToReceive})");
+                else if (downloadstat == 3)
+                    PrintLog($"Downloading Launcher...{e.ProgressPercentage}% ({e.BytesReceived} / {e.TotalBytesToReceive})");
             }
         }
 
@@ -162,6 +203,11 @@ namespace MindustryInstaller
         {
             DownloadStable = false;
             new Thread(() => LoadVersion()).Start();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Environment.Exit(0); // For kill all threads.
         }
     }
 }

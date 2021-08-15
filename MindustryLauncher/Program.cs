@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,14 @@ namespace MindustryLauncher
     {
         static void Main(string[] args)
         {
-            Process.Start(@"\java\bin\java -jar Mindustry.jar");
+            Process.Start(new ProcessStartInfo()
+            {
+                FileName = @"cmd.exe",
+                Arguments= @"/c start /b java\bin\java -jar Mindustry.jar > " + Path.GetTempPath() + @"MindustryLog.txt",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                WorkingDirectory = Directory.GetCurrentDirectory()
+            });
         }
     }
 }
