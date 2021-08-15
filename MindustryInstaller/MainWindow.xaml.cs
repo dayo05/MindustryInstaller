@@ -2,14 +2,16 @@
 using System.IO;
 using System.Net;
 using System.Windows;
+using System.Threading;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.Win32;
+using System.Reflection;
+using System.Diagnostics;
 
-using Newtonsoft.Json;
-using System.Threading;
-using System.Threading.Tasks;
+//using Newtonsoft.Json;
 
 namespace MindustryInstaller
 {
@@ -20,7 +22,16 @@ namespace MindustryInstaller
     {
         public MainWindow()
         {
+            if (!File.Exists("Newtonsoft.Json.dll"))
+            {
+                MessageBox.Show("Necessery dll not found. This program will download it.\nPlese wait.");
+                using (var wc = new WebClient())
+                {
+                    wc.DownloadFile("https://github.com/dayo05/MindustryInstaller/releases/download/1.0/Newtonsoft.Json.dll", "Newtonsoft.Json.dll");
+                }
+            }
             InitializeComponent();
+
             new Thread(LoadVersionOfLauncher).Start();
             Directory.CreateDirectory(InstallDir);
             Directory.CreateDirectory(TempDir);
@@ -49,7 +60,7 @@ namespace MindustryInstaller
                 wc.Headers["User-Agent"] = "ua";
                 PrintLog("Searching launcher version");
                 launcherVersion = wc.DownloadString("https://api.github.com/repos/Dayo05/MindustryInstaller/releases/latest");
-                launcherVersion = JsonConvert.DeserializeObject<Dictionary<string, object>>(launcherVersion)["tag_name"] as string;
+                launcherVersion = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(launcherVersion)["tag_name"] as string;
                 PrintLog($"Launcher version: {launcherVersion} found");
             }
         }
@@ -66,13 +77,13 @@ namespace MindustryInstaller
                 {
                     PrintLog("Searching stable version");
                     version = wc.DownloadString("https://api.github.com/repos/Anuken/Mindustry/releases/latest");
-                    version = JsonConvert.DeserializeObject<Dictionary<string, object>>(version)["tag_name"] as string;
+                    version = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(version)["tag_name"] as string;
                 }
                 else
                 {
                     PrintLog("Searching preview version");
                     version = wc.DownloadString("https://api.github.com/repos/Anuken/Mindustry/releases");
-                    version = JsonConvert.DeserializeObject<List<Dictionary<string, dynamic>>>(version)[0]["tag_name"] as string;
+                    version = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Dictionary<string, dynamic>>>(version)[0]["tag_name"] as string;
                 }
                 PrintLog($"Mindustry version: {version} found");
                 Invoke(() => VersionLabel.Content = "Mindustry version: " + version);
